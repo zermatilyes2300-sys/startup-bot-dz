@@ -98,7 +98,7 @@ def generer_idees(secteur, difficulte, focus):
 - اكتب بمزيج عربية وفرنسية طبيعي"""
 
     response = client.models.generate_content(
-        model="gemini-1.5-flash",
+        model="gemini-2.0-flash-lite",
         contents=prompt
     )
     return response.text
@@ -226,7 +226,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     try:
         response = client.models.generate_content(
-            model="gemini-1.5-flash",
+            model="gemini-2.0-flash-lite",
             contents=f"""أنت خبير في ريادة الأعمال الصناعية في الجزائر متخصص في génie chimique.
 أجب على هذا السؤال بشكل مختصر ومفيد للسوق الجزائري:
 
