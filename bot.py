@@ -1,14 +1,15 @@
 import os
-import anthropic
+import google.generativeai as genai
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from telegram.request import HTTPXRequest
 
 # ====== CONFIGURATION ======
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # ====== KEYBOARDS ======
 def menu_principal():
@@ -97,12 +98,8 @@ def generer_idees(secteur, difficulte, focus):
 - تجنب القطاعات المحتكرة من الدولة
 - اكتب بمزيج عربية وفرنسية طبيعي"""
 
-    message = client.messages.create(
-        model="claude-opus-4-5",
-        max_tokens=2000,
-        messages=[{"role": "user", "content": prompt}]
-    )
-    return message.content[0].text
+    response = model.generate_content(prompt)
+    return response.text
 
 # ====== HANDLERS ======
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -226,21 +223,13 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("⏳ نفكر معك...")
 
     try:
-        message = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=1000,
-            messages=[{
-                "role": "user",
-                "content": f"""أنت خبير في ريادة الأعمال الصناعية في الجزائر متخصص في génie chimique.
+        response = model.generate_content(f"""أنت خبير في ريادة الأعمال الصناعية في الجزائر متخصص في génie chimique.
 أجب على هذا السؤال بشكل مختصر ومفيد للسوق الجزائري:
 
 {user_text}
 
-اكتب بمزيج عربية وفرنسية طبيعي. الجواب ما يتعداش 500 كلمة."""
-            }]
-        )
-        response = message.content[0].text
-        await update.message.reply_text(response, parse_mode="Markdown")
+اكتب بمزيج عربية وفرنسية طبيعي. الجواب ما يتعداش 500 كلمة.""")
+        await update.message.reply_text(response.text, parse_mode="Markdown")
 
     except Exception as e:
         await update.message.reply_text(f"❌ خطأ: {str(e)}")
