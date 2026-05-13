@@ -1,5 +1,5 @@
 import os
-import google.generativeai as genai
+from google import genai
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 from telegram.request import HTTPXRequest
@@ -8,8 +8,7 @@ from telegram.request import HTTPXRequest
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 # ====== KEYBOARDS ======
 def menu_principal():
@@ -98,7 +97,10 @@ def generer_idees(secteur, difficulte, focus):
 - تجنب القطاعات المحتكرة من الدولة
 - اكتب بمزيج عربية وفرنسية طبيعي"""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model="gemini-2.0-flash",
+        contents=prompt
+    )
     return response.text
 
 # ====== HANDLERS ======
@@ -223,12 +225,15 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("⏳ نفكر معك...")
 
     try:
-        response = model.generate_content(f"""أنت خبير في ريادة الأعمال الصناعية في الجزائر متخصص في génie chimique.
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=f"""أنت خبير في ريادة الأعمال الصناعية في الجزائر متخصص في génie chimique.
 أجب على هذا السؤال بشكل مختصر ومفيد للسوق الجزائري:
 
 {user_text}
 
-اكتب بمزيج عربية وفرنسية طبيعي. الجواب ما يتعداش 500 كلمة.""")
+اكتب بمزيج عربية وفرنسية طبيعي. الجواب ما يتعداش 500 كلمة."""
+        )
         await update.message.reply_text(response.text, parse_mode="Markdown")
 
     except Exception as e:
