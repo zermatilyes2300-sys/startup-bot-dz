@@ -2,6 +2,7 @@ import os
 import anthropic
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+from telegram.request import HTTPXRequest
 
 # ====== CONFIGURATION ======
 TELEGRAM_TOKEN = os.environ.get("TELEGRAM_TOKEN")
@@ -246,7 +247,8 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ====== MAIN ======
 def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
+    request = HTTPXRequest(connect_timeout=30, read_timeout=30)
+    app = Application.builder().token(TELEGRAM_TOKEN).request(request).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CallbackQueryHandler(button_handler))
